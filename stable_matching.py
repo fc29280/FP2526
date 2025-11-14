@@ -131,7 +131,7 @@ def input_prefs(num_participants):
        
     for i in range(num_participants):
         name = input("Enter name of participant " + str(i + 1) + ": ") # Solicita o nome do participante atual (i+1 porque o índice começa em 0)
-        print("Enter preferences in order (one per line):")
+        print("Enter preferences in order (one per line):") #corrigido o output gerado, existia omissão de parte da linha, foi apontado pelo Professor
         preferences = [] # Lista para armazenar as preferências do participante
         
         # Recolhe preferências para os participantes
@@ -198,19 +198,21 @@ def most_chosen(prefs, participants_list):
 
 def prefs_to_dict(prefs):
     """
-    Takes as input preferences `prefs` and returns a dictionary of `prefs`.
+    Takes as input preferences `prefs` and returns a dictionary of `prefs'.
     """
+    #opção com funções built-in. Uso directo da função dict(), corresponde ao hint que o professor colocou no enunciado, esta função torna a aplicação mais practica e limpa.
+    
+    return dict(prefs)
+
     # complete me
+    """
+    Opção inicialmente construida, mas o uso da função dict() permite um código mais limpo e sem necessidade de linhas de código extras.
     dict_prefs = {} # cria um dicionário vazio
     for pair in prefs: # percorre cada tuple dentro de cada lista
         dict_prefs[pair[0]] = pair[1] # atribui ao dicionário o primeiro elemento do tuplo como chave e o segundo elemento como valor
     return dict_prefs # devolve o dicionário completo
+    """
 
-    #opção com funções built-in. Uso directo sem mais nada ? Tenho de validar se poderá ser usado assim, mas parece-me que sim e corresponde
-    #à chamada que o professor colocou no enunciado.
-    """
-    return dict(prefs)  
-    """
 
 def permutations(list, perms=[]):
     """
@@ -218,19 +220,19 @@ def permutations(list, perms=[]):
     """
     # complete me
 
-        # Caso base: se a lista está vazia, retorna uma lista contendo apenas perms
+    # if list is empty , return list of perms
     if len(list) == 0:
         return [perms]
     
-    # Inicializa uma lista vazia para guardar todas as permutações
+    # initialise empty list of all permutations
     all_perms = []
     
-    # Para cada elemento na lista
+    # for each element in the list
     for i in range(len(list)):
-        # Obtém o elemento atual
+        # obtain the remaining elements of the list
         current = list[i]
         
-        # Obtém os elementos restantes (todos exceto o atual)
+        # recursively call permutations , with the remaining elements , and the new permutations formed by adding the chosen element of the list
         # lista[:i] = elementos antes de i
         # lista[i+1:] = elementos depois de i
         remaining = list[:i] + list[i+1:]
@@ -238,11 +240,11 @@ def permutations(list, perms=[]):
         # Cria novas permutações adicionando o elemento atual às perms existentes
         new_perms = perms + [current]
         
-        # Chama recursivamente para obter permutações dos elementos restantes
+        # Recursão para obter permutações dos elementos restantes
         sub_perms = permutations(remaining, new_perms)
         
-        # Adiciona todas as sub-permutações ao resultado final
-        all_perms = all_perms + sub_perms #evitar alterar a lista enquanto se itera sobre ela
+        # add all new permutation in a list of permutations
+        all_perms = all_perms + sub_perms #evitar alterar a lista enquanto se itera sobre ela (all_perms += sub_perms)
     
     return all_perms
 
@@ -254,7 +256,7 @@ def generate_all_matchings(proposers, acceptors):
     # complete me
 
     # Obtém todas as permutações dos acceptors
-    # REUTILIZAÇÃO: função permutations criada anteriormente
+    # Reutiliza a função permutations criada anteriormente
     acceptor_perms = permutations(acceptors)
     
     # Inicializa lista para guardar todos os matchings
@@ -269,7 +271,7 @@ def generate_all_matchings(proposers, acceptors):
             pair = (proposers[i], perm[i])
             matching.append(pair)
 
-        # Adiciona este matching à nossa lista
+        # Adiciona o matching à lista
         all_matchings.append(matching)
     
     return all_matchings
@@ -280,7 +282,7 @@ def is_matching_stable(proposers_dict, acceptors_dict, matching):
     """
     # complete me
 
-    # Passo 1: Criar dicionários para saber quem está emparelhado com quem
+    #Criar dicionários para saber quem está emparelhado com quem
     proposer_matches = {}  # Dicionário: proposer → acceptor
     acceptor_matches = {}  # Dicionário: acceptor → proposer
 
@@ -289,9 +291,9 @@ def is_matching_stable(proposers_dict, acceptors_dict, matching):
         proposer_matches[proposer] = acceptor
         acceptor_matches[acceptor] = proposer
     
-    # Passo 2: Verificar cada proposer
+    #Verificação de cada proposer
     for proposer, acceptor in matching:
-        # Obter com quem este proposer está emparelhado
+        # Obter resultados de emparelhamento de acceptor com proposer 
         current_acceptor = proposer_matches[proposer]
         
         # Obter a lista de preferências do proposer
@@ -300,7 +302,7 @@ def is_matching_stable(proposers_dict, acceptors_dict, matching):
         # Encontrar a posição do emparelhamento atual na lista
         current_position = proposer_prefs.index(current_acceptor)
         
-        # Passo 3: Verificar todos os aceitadores que o proponente prefere mais
+        # Verificar todos os acceptors que o proponente prefere mais
         # (todos os que estão antes na lista de preferências)
         for i in range(current_position):
             preferred_acceptor = proposer_prefs[i]
@@ -315,10 +317,10 @@ def is_matching_stable(proposers_dict, acceptors_dict, matching):
             position_of_current = acceptor_prefs.index(current_proposer_of_acceptor)
             position_of_proposer = acceptor_prefs.index(proposer)
             
-            # Passo 4: Verificar se o acceptor também prefere este proposer
+            # Verificar se o acceptor também prefere este proposer
             # Se a posição do proposer < posição do atual → prefere o proposer
             if position_of_proposer < position_of_current:
-                # INSTÁVEL! Ambos se preferem mas não estão juntos
+                # Ambos se preferem mas não estão juntos - emparelhamento instável
                 return False
     
     # nenhum par instável foi encontrado
