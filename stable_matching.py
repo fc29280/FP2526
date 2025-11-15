@@ -4,7 +4,7 @@
 
 # Submission for Group:
 # Student 1: João Pedro Diogo Rebolho - 64494
-# Student 2:Rui Miguel Martins Costa - 29280
+# Student 2: Rui Miguel Martins Costa - 29280
 
 ### AUXILIARY DEFINITIONS
 def no_repetitions(list):
@@ -108,6 +108,7 @@ def compatible_prefs(prefs1, prefs2):
             return False
     
     return True
+
 # FUNCTIONS A2
 def preferences_by_position(prefs, index):
     """
@@ -283,8 +284,8 @@ def is_matching_stable(proposers_dict, acceptors_dict, matching):
     # complete me
 
     #Criar dicionários para saber quem está emparelhado com quem
-    proposer_matches = {}  # Dicionário: proposer → acceptor
-    acceptor_matches = {}  # Dicionário: acceptor → proposer
+    proposer_matches = {}  # Dicionário: proposer -> acceptor
+    acceptor_matches = {}  # Dicionário: acceptor -> proposer
 
     # Preencher os dicionários com o emparelhamento atual
     for proposer, acceptor in matching:
@@ -318,7 +319,7 @@ def is_matching_stable(proposers_dict, acceptors_dict, matching):
             position_of_proposer = acceptor_prefs.index(proposer)
             
             # Verificar se o acceptor também prefere este proposer
-            # Se a posição do proposer < posição do atual → prefere o proposer
+            # Se a posição do proposer < posição do atual -> prefere o proposer
             if position_of_proposer < position_of_current:
                 # Ambos se preferem mas não estão juntos - emparelhamento instável
                 return False
@@ -332,11 +333,36 @@ def calculate_likeability_match(proposers_dict, acceptors_dict, match):
     """
     # complete me
 
+    # vai a cada dicionário e obtém a lista de preferências do proposer e do acceptor
+    proposer, acceptor = match # separa o tuple match (criado na função generate_all_matchings) em duas variáveis 
+    
+    # obtém a lista de preferências do proposer e do acceptor
+    proposer_prefs = proposers_dict[proposer] # acede ao dicionário dos proposers com a chave proposer para obter a lista de preferências do proposer
+    acceptor_prefs = acceptors_dict[acceptor] # acede ao dicionário dos acceptors com a chave acceptor para obter a lista de preferências do acceptor
+
+    # posição do acceptor na lista do proposer
+    position_acceptor = proposer_prefs.index(acceptor) # usa o index para encontrar a posição do acceptor na lista de preferências do proposer
+
+    # posição do proposer na lista do acceptor
+    position_proposer = acceptor_prefs.index(proposer) # usa o index para encontrar a posição do proposer na lista de preferências do acceptor
+
+    # soma as duas posições e devolve o resultado
+    return position_acceptor + position_proposer 
+
 def calculate_likeability_matching(proposers_dict, acceptors_dict, matchings):
     """
     Takes as input proposer's preferences dictionary `proposers_dict`, acceptor's preferences dictionary `acceptors_dict` and matchings `matchings`, and returns the global likeability score of the matching.
     """
     # complete me
+
+    global_likeability_score = 0 # inicializa a variável para o score global a 0
+
+    # para cada match (tuple: (proposer, acceptor)) dentro da lista de matchings
+    for match in matchings:
+        score = calculate_likeability_match(proposers_dict, acceptors_dict, match) # usa a função calculate_likeability_match para obter o score do match atual
+        global_likeability_score += score # soma o score deste match ao total acumulado
+    return global_likeability_score # devolve a soma das likeabilities de todos os matches
+
 
 def calculate_best_matching(proposers_dict, acceptors_dict):
     """
@@ -344,8 +370,82 @@ def calculate_best_matching(proposers_dict, acceptors_dict):
     """
     # complete me
 
+    # obtém listas de proposers e acceptors a partir das chaves dos dicionários
+    proposers = list(proposers_dict.keys())
+    acceptors = list(acceptors_dict.keys())
+    
+    # gera todos os matchings possíveis entre proposers e acceptors usando a função generate_all_matchings
+    all_matchings = generate_all_matchings(proposers, acceptors)
+
+    # filtra apenas os matchings que são estáveis
+    stable_matchings = [] # cria uma lista vazia para guardar os matchings estáveis
+    for matching in all_matchings: # percorre todos os matchings gerados
+        if is_matching_stable(proposers_dict, acceptors_dict, matching): # usa a função is_matching_stable para verificar se o matching atual é estável
+            stable_matchings.append(matching) # se for estável adiciona-o à lista stable_matchings
+
+    # calcular os scores dos matchings estáveis
+    scores_stable_matchings = [] # cria uma lista vazia para guardar os scores dos matchings estáveis
+    for matching in stable_matchings: # percorre cada matching estável
+        score = calculate_likeability_matching(proposers_dict, acceptors_dict, matching) # usa a função calculate_likeability_matching para obter o score do matching atual
+        scores_stable_matchings.append(score) # adiciona o score à lista de scores dos matchings estáveis
+
+    # obter o score mínimo entre os matchings estáveis
+    best_score = min(scores_stable_matchings) # usa a função min para obter o menor score entre os scores dos matchings estáveis
+
+    # obter todos os matchings estáveis com o score mínimo
+    better_likeability_score = [] # cria uma lista vazia para guardar os matchings com melhor score
+    for matching, score in zip(stable_matchings, scores_stable_matchings): # percorre os matchings estáveis e os seus scores em paralelo
+        if score == best_score: # se o score do matching atual for igual ao melhor score
+            better_likeability_score.append(matching) # adiciona o matching à lista de melhores matchings
+    return better_likeability_score
+
+
 def most_desirable(prefs, participants_list):
     """
     Takes as input preferences `prefs` and a list of participants `participants_list` consisting of the participants used as preferences in `prefs` and returns the participant (or participants) who is considered the most desirable across all choice positions i.e., ties are resolved by searching on the next position of preferences.
     """
     # complete me
+
+    # número total de posições nas listas de preferências
+    num_positions = len(participants_list) # obtém o número de posições (tamanho da lista de preferências)
+
+    # lista inicial dos participantes que ainda estão empatados
+    remaining_candidates = participants_list[:]  # faz uma cópia da lista original de participantes
+
+    # percorre cada posição da lista de preferências
+    for pos in range(num_positions):
+        occurrences = []
+        for candidate in remaining_candidates:
+            occurrences.append(0)
+
+        prefs_position = preferences_by_position(prefs, pos) # usa a função preferences_by_position para obter a lista de preferências na posição atual
+
+        # conta quantas vezes cada candidato aparece na posição atual
+        for pref in prefs_position: 
+            for i in range(len(remaining_candidates)):
+                if remaining_candidates[i] == pref:
+                    occurrences[i] += 1
+
+        # encontra o número máximo de ocorrências
+        max_occurrences = 0
+        for count in occurrences:
+            if count > max_occurrences:
+                max_occurrences = count
+
+        # cria nova lista com os candidatos que atingiram o máximo de ocorrências
+        new_remaining_candidates = []
+        for i in range(len(remaining_candidates)):
+            if occurrences[i] == max_occurrences:
+                new_remaining_candidates.append(remaining_candidates[i])
+
+        # atualiza a lista de candidatos empatados
+        remaining_candidates = new_remaining_candidates
+
+        # se restar apenas um candidato, retorna-o
+        if len(remaining_candidates) == 1:
+            return remaining_candidates
+
+    # se houver empate após todas as posições, retorna todos os candidatos restantes
+    return remaining_candidates
+
+
